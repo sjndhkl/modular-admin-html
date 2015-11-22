@@ -2,24 +2,39 @@ var path 	= require('path');
 var glob 	= require('glob');
 var fs 		= require('fs');
 var extend 	= require('util')._extend;
+var through = require('through2');
+var gulpFilter = require('gulp-filter');
 
 var config 	= require('../config');
 
 module.exports.task = function(gulp, plugins, paths) {
 	
-	gulp.src(paths.app.pages.src)
+	var engine = new plugins.compileLiquid.Liquid.Engine;
+	var layouts = {};
+
+	var layoutFilter = gulpFilter([ '*-layout.html' ], { restore: true });
+	var pageFilter = gulpFilter([ '*-page.html' ], { restore: true });
+
+	gulp.src([ paths.app.layouts.src, paths.app.pages.src ])
+		
+
+		.pipe(layoutFilter)
+		.pipe(through.obj(function (file, enc, cb) {
+			var ext = path.extname(file.relative);
+			var name = path.basename(file.relative, ext).replace('-layout', '');
+			layouts[name] = engine.parse(file.contents);
+
+			this.push(file);
+			cb();
+		}))
+		.pipe(layoutFilter.restore)
+		
+
+		.pipe(pageFilter)
 		// Frontmatter
 		.pipe(plugins.frontMatter())
 		// handlebars compilation
-		.pipe(plugins.hb({
-			// Register all templates as partials
-			partials: paths.app.templates.src,
-			// Partials naming e.g. 'app/app-layout'
-			parsePartialName: function (file) {
-				return file.shortPath;
-			},
-			// Registering template helpers
-			helpers:  paths.app.helpers.src,
+		.pipe(plugins.compileLiquid({
 			// Context data for each page file
 			dataEach: function (context, file) {
 
@@ -27,9 +42,30 @@ module.exports.task = function(gulp, plugins, paths) {
 					contextExtended = extend(contextExtended, file.frontMatter);
 
 				return contextExtended;
-			},
-			// Remove cache every time for 'watch'
-			bustCache: true
+			}
+		}))
+
+
+		.pipe(through.obj(function (file, enc, cb) {
+			var _that = this;
+			var name = file.frontMatter.layout || '';
+
+			if (name && layouts[name]) {
+				layouts[name]
+					.then(function(template) {
+						return template.render({
+							content: file.contents.toString()
+						}); 
+					})
+					.then(function(result) {
+						file.contents = new Buffer(result);
+						_that.push(file);
+						cb();
+					});
+			} else {			
+				_that.push(file);
+				cb();
+			}
 		}))
 
 		// Handle errors
@@ -37,8 +73,8 @@ module.exports.task = function(gulp, plugins, paths) {
 
 		// Rename .page.hbs to .html
 		.pipe(plugins.rename(function (path) {
-			path.basename = path.basename.replace("-page", "");
-			path.extname = ".html"
+			path.basename = path.basename.replace('-page', '');
+			path.extname = '.html';
 		}))
 		
 		// Flatten structure

@@ -63,7 +63,7 @@ var destDir 	= config.destDir;
 	*/
 
 	exports.pages = {
-		src: srcDir + "/**/*-page.hbs",
+		src: srcDir + "/**/*-page.html",
 		dest: destDir + "/"
 	};
 
@@ -79,7 +79,7 @@ var destDir 	= config.destDir;
 	*/
 
 	exports.templates = {
-		src: srcDir + "/**/*.hbs",
+		src: srcDir + "/**/*.html",
 		dest: destDir + "/templates"
 	};
 
@@ -112,7 +112,7 @@ var destDir 	= config.destDir;
 	*/
 
 	exports.layouts = {
-		src: srcDir + "/**/*-layout.hbs",
+		src: srcDir + "/**/*-layout.html",
 		dest: destDir + "/templates"
 	};
 

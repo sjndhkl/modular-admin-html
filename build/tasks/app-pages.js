@@ -12,8 +12,8 @@ module.exports.task = function(gulp, plugins, paths) {
 	var engine = new plugins.compileLiquid.Liquid.Engine;
 	var layouts = {};
 
-	var layoutFilter = gulpFilter([ '*-layout.html' ], { restore: true });
-	var pageFilter = gulpFilter([ '*-page.html' ], { restore: true });
+	var layoutFilter = gulpFilter([ '**/*-layout.html' ], { restore: true });
+	var pageFilter = gulpFilter([ '**/*-page.html' ], { restore: true });
 
 	gulp.src([ paths.app.layouts.src, paths.app.pages.src ])
 		

@@ -10,6 +10,8 @@ var config 	= require('../config');
 module.exports.task = function(gulp, plugins, paths) {
 	
 	var engine = new plugins.compileLiquid.Liquid.Engine;
+	engine.registerFileSystem(new plugins.compileLiquid.Liquid.LocalFileSystem(config.srcDir));
+
 	var layouts = {};
 
 	var layoutFilter = gulpFilter([ '**/*-layout.html' ], { restore: true });
@@ -35,6 +37,7 @@ module.exports.task = function(gulp, plugins, paths) {
 		.pipe(plugins.frontMatter())
 		// handlebars compilation
 		.pipe(plugins.compileLiquid({
+			rootPath: config.srcDir,
 			// Context data for each page file
 			dataEach: function (context, file) {
 
